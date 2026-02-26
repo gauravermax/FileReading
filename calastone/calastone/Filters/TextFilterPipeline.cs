@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Calastone.Filters;
 
@@ -43,6 +44,9 @@ public class TextFilterPipeline
             return string.Join(" ", words);
         }
 
+        // Adding cancellation token for 5 sec 
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
         // Run each filter in parallel — each filter independently decides which words to keep
         var filterTasks = _filters.Select(filter => Task.Run(() =>
         {
@@ -60,7 +64,9 @@ public class TextFilterPipeline
                     filter.Name);
                 return new HashSet<string>(words);
             }
-        })).ToArray();
+        }, cts.Token)).ToArray();
+
+
 
         Task.WaitAll(filterTasks);
 
