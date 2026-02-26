@@ -29,6 +29,22 @@ public class MiddleVowelFilterTests
     }
 
     [Fact]
+    public void Word_OneoTwo_Length_NoVowel_IsRemoved()
+    {
+       var result = _filter.Apply(new[] { "s", "hh" }).ToList();
+        Assert.Equal(new[] { "s", "hh" }, result);
+        
+    }
+
+    [Fact]
+    public void Word_OneoTwo_Length_MiddleVowel_IsKept()
+    {
+        var result = _filter.Apply(new[] { "a", "ee" }).ToList();
+        Assert.Empty(result);
+    }
+
+
+    [Fact]
     public void Apply_OddLength_NoMiddleVowel_IsKept()
     {
         // "the" (len 3) -> middle index 1 = 'h' -> kept

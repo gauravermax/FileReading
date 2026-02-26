@@ -20,7 +20,7 @@ public class MiddleVowelFilter : ITextFilter
 
     private static bool HasMiddleVowel(string word)
     {
-        if (string.IsNullOrEmpty(word) || word.Length < 2)
+        if (string.IsNullOrEmpty(word))
             return false;
 
         int length = word.Length;
