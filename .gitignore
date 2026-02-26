@@ -1,0 +1,11 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/calastone/.vs/calastone
+/calastone/calastone/bin/Debug/net8.0
+/calastone/calastone/obj/calastone.csproj.nuget.dgspec.json
+/calastone/calastone/obj/calastone.csproj.nuget.g.props
+/calastone/calastone/obj/project.assets.json
+/calastone/calastone/obj/project.nuget.cache
