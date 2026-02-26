@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Calastone.Filters;
 using Calastone.IO;
+using Microsoft.Extensions.Configuration;
 
 // Build the DI container (DIP — all dependencies wired via abstractions)
 var services = new ServiceCollection();
@@ -31,7 +32,14 @@ var programLogger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateL
 
 try
 {
-    string filePath = args.Length > 0 ? args[0] : "input.txt";
+    
+    var configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional:false,reloadOnChange:false)
+        .Build();
+
+    // fetch file name from config
+    string filePath = configuration["TextSource:FilePath"] ?? "input-old.txt";
 
     var fileReader = serviceProvider.GetRequiredService<IFileReader>();
 
