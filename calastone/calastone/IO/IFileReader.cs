@@ -13,9 +13,9 @@ public interface IFileReader
     Task<string> ReadAllTextAsync(string filePath);
 
     /// <summary>
-    /// Checks whether a file exists at the specified path.
+    /// Validation Checks on file using the file metadata
     /// </summary>
     /// <param name="filePath">Path to check.</param>
     /// <returns>True if the file exists; otherwise false.</returns>
-    bool Exists(string filePath);
+    bool IsValid(string filePath);
 }

@@ -16,6 +16,7 @@ services.AddLogging(builder =>
 });
 
 // Register file reader (SRP — file I/O is a separate concern)
+// Todo : inject file in the file reader
 services.AddSingleton<IFileReader, FileReader>();
 
 // Register all filters (OCP — add new filters here without modifying existing code)
@@ -40,17 +41,18 @@ try
 
     // fetch file name from config
     string filePath = configuration["TextSource:FilePath"] ?? "input-old.txt";
+    programLogger.LogInformation("File path {file}", filePath);
 
     var fileReader = serviceProvider.GetRequiredService<IFileReader>();
 
-    if (!fileReader.Exists(filePath))
+    if (!fileReader.IsValid(filePath))
     {
-        programLogger.LogError("File not found: {FilePath}", filePath);
-        Console.Error.WriteLine($"Error: File not found: {filePath}");
+        programLogger.LogError("Validaion failed {file}", filePath);
+        Console.Error.WriteLine($"Error: Validtion failed: {filePath}");
         Environment.Exit(1);
         return;
     }
-
+    programLogger.LogInformation("Validaion passed {file}", filePath);
     string text;
     try
     {
@@ -67,6 +69,13 @@ try
     {
         programLogger.LogError(ex, "Access denied to file: {FilePath}", filePath);
         Console.Error.WriteLine($"Error: Access denied to file: {filePath}. {ex.Message}");
+        Environment.Exit(1);
+        return;
+    }
+    catch (Exception ex)
+    {
+        programLogger.LogError(ex, "An Error has occured {error}", ex.InnerException);
+        Console.Error.WriteLine($"Error: {ex.InnerException}");
         Environment.Exit(1);
         return;
     }

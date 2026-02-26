@@ -15,44 +15,40 @@ public class FileReader : IFileReader
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public bool Exists(string filePath)
+    public bool IsValid(string filePath)
     {
+
+        const long MaxFileSizeInBytes = 5 * 1024 * 1024; // 5 MB
+
         if (string.IsNullOrWhiteSpace(filePath))
         {
             _logger.LogWarning("File path is null or empty.");
             return false;
         }
 
-        bool exists = File.Exists(filePath);
-        _logger.LogDebug("File existence check for '{FilePath}': {Exists}", filePath, exists);
-        return exists;
-    }
-
-    public async Task<string> ReadAllTextAsync(string filePath)
-    {
-        const long MaxFileSizeInBytes = 5 * 1024 * 1024; // 5 MB
-
-        if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be null or empty.", nameof(filePath));
-
         var fileInfo = new FileInfo(filePath);
 
         if (!fileInfo.Exists)
         {
             _logger.LogError("File not found: {FilePath}", filePath);
-            throw new FileNotFoundException($"File not found: {filePath}", filePath);
+            return false;
         }
 
-        
+
         if (fileInfo.Length > MaxFileSizeInBytes)
         {
             _logger.LogWarning("File {FilePath} exceeds size limit. Size: {Size} bytes", filePath, fileInfo.Length);
-            throw new InvalidOperationException($"File is too large (Maximum allowed: 5MB).");
+            return false;
         }
 
-        try
+        return true;
+    }
+
+    public async Task<string> ReadAllTextAsync(string filePath)
+    {
+       try
         {
-            _logger.LogInformation("Reading file: {FilePath}", filePath);
+           _logger.LogInformation("Reading file: {FilePath}", filePath);
 
             // Use a using block to ensure the stream is properly disposed
             using var reader = new StreamReader(filePath);
@@ -69,6 +65,21 @@ public class FileReader : IFileReader
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogError(ex, "Access denied to file: {FilePath}", filePath);
+            throw;
+        }
+        catch (ArgumentNullException ex)
+        {
+            _logger.LogError(ex, "Null file: {FilePath}", filePath);
+            throw;
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogError(ex, "Empty file: {FilePath}", filePath);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error and occured : {0}", ex.InnerException);
             throw;
         }
     }
