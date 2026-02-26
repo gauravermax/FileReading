@@ -12,6 +12,12 @@ public class MiddleVowelFilterTests
     {
         Assert.Throws<ArgumentNullException>(() => _filter.Apply(null!).ToList());
     }
+    [Fact]
+    public void Apply_Assingment_Examplel()
+    {
+        var result = _filter.Apply(new[] { "Clean", "what", "currently", "the", "rather" }).ToList();
+        Assert.Equal(new[] { "the", "rather" }, result);
+    }
 
     [Fact]
     public void Apply_OddLength_MiddleVowel_IsRemoved()
