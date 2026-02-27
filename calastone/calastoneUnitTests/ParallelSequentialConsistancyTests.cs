@@ -1,4 +1,5 @@
 ﻿
+using calastone.Pipeline;
 using Calastone.Filters;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -9,7 +10,7 @@ public class ParallelSequentialConsistancyTests
 {
     private readonly ITextFilter[] _filters;
     private readonly ILogger<TextFilterPipeline> _logger;
-    private readonly TextFilterPipeline _pipeline;
+    private readonly ITextFilterPipeline _pipeline;
     public ParallelSequentialConsistancyTests()
     {
         _filters = new ITextFilter[]
@@ -19,7 +20,7 @@ public class ParallelSequentialConsistancyTests
                 new LetterTFilter('t')
         };
         _logger = new Mock<ILogger<TextFilterPipeline>>().Object;
-        _pipeline =   new TextFilterPipeline(_filters, _logger);
+        _pipeline = new TextFilterPipeline(_filters, _logger);
     }
 
    
@@ -37,27 +38,24 @@ public class ParallelSequentialConsistancyTests
     //    return string.Join(" ", words.Where(w => passedWords.Contains(w)));
     //}
 
-    /// <summary>
-    /// Sequential: each filter receives the output of the previous filter.
-    /// </summary>
-    private string ApplySequential(string input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-        string[] words = input.Split((char[])null!, StringSplitOptions.RemoveEmptyEntries);
-        IEnumerable<string> currentWords = words;
-        foreach (var filter in _filters)
-        {
-            currentWords = filter.Apply(currentWords).ToArray();
-        }
-        return string.Join(" ", currentWords);
-    }
+    //   private string ApplySequential(string input)
+    //{
+    //    if (string.IsNullOrWhiteSpace(input)) return string.Empty;
+    //    string[] words = input.Split((char[])null!, StringSplitOptions.RemoveEmptyEntries);
+    //    IEnumerable<string> currentWords = words;
+    //    foreach (var filter in _filters)
+    //    {
+    //        currentWords = filter.Apply(currentWords).ToArray();
+    //    }
+    //    return string.Join(" ", currentWords);
+    //}
 
     [Fact]
     public void ParallelAndSequential_SameInput_SameResult()
     {
         string input = "The quick brown fox jumps over the lazy dog and currently runs rather fast";
         string parallelResult = _pipeline.Apply(input);
-        string sequentialResult = ApplySequential(input);
+        string sequentialResult = _pipeline.Apply(input,true);
         Assert.Equal(sequentialResult, parallelResult);
     }
 
@@ -65,27 +63,27 @@ public class ParallelSequentialConsistancyTests
     public void ParallelAndSequential_SingleWord_SameResult()
     {
         string input = "fox";
-        Assert.Equal(ApplySequential(input), _pipeline.Apply(input));
+        Assert.Equal(_pipeline.Apply(input, true), _pipeline.Apply(input));
     }
     [Fact]
     public void ParallelAndSequential_AllWordsFiltered_SameResult()
     {
         // "the" → removed by LetterTFilter, "it" → removed by ShortWordFilter & LetterTFilter
         string input = "the it at";
-        Assert.Equal(ApplySequential(input), _pipeline.Apply(input));
+        Assert.Equal(_pipeline.Apply(input, true), _pipeline.Apply(input));
     }
     [Fact]
     public void ParallelAndSequential_NoWordsFiltered_SameResult()
     {
         // "brown" passes all 3 filters: length >= 3, no 't', no middle vowel
         string input = "brown";
-        Assert.Equal(ApplySequential(input), _pipeline.Apply(input));
+        Assert.Equal(_pipeline.Apply(input, true), _pipeline.Apply(input));
     }
     [Fact]
     public void ParallelAndSequential_EmptyInput_SameResult()
     {
         string input = "";
-        Assert.Equal(ApplySequential(input), _pipeline.Apply(input));
+        Assert.Equal(_pipeline.Apply(input, true), _pipeline.Apply(input));
     }
     [Fact]
     public void ParallelAndSequential_LargeInput_SameResult()
@@ -93,7 +91,7 @@ public class ParallelSequentialConsistancyTests
         // Repeat to create a larger dataset
         string baseLine = "The quick brown fox jumps over the lazy dog and currently runs rather fast";
         string input = string.Join(" ", Enumerable.Repeat(baseLine, 100));
-        Assert.Equal(ApplySequential(input), _pipeline.Apply(input));
+        Assert.Equal(_pipeline.Apply(input, true), _pipeline.Apply(input));
     }
 
     [Theory]
@@ -102,7 +100,7 @@ public class ParallelSequentialConsistancyTests
     [InlineData("a b c d e f g h i j k l m")]
     public void ParallelAndSequential_VariousInputs_SameResult(string input)
     {
-        Assert.Equal(ApplySequential(input), _pipeline.Apply(input));
+        Assert.Equal(_pipeline.Apply(input, true), _pipeline.Apply(input));
     }
    
 }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Calastone.Filters;
 using Xunit;
+using calastone.Pipeline;
 
 namespace CalastoneTests;
 

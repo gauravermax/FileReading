@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Calastone.Filters;
 using Calastone.IO;
 using Microsoft.Extensions.Configuration;
+using calastone.Pipeline;
 
 // Build the DI container (DIP — all dependencies wired via abstractions)
 var services = new ServiceCollection();
@@ -25,7 +26,7 @@ services.AddSingleton<ITextFilter, ShortWordFilter>();
 services.AddSingleton<ITextFilter>(sp => new LetterTFilter('t')); // Dynamic letter
 
 // Register the pipeline
-services.AddSingleton<TextFilterPipeline>();
+services.AddSingleton<ITextFilterPipeline,TextFilterPipeline>();
 
 using var serviceProvider = services.BuildServiceProvider();
 
@@ -90,9 +91,9 @@ try
     programLogger.LogInformation("Input text {count} char  : {Text}", text.Length,text);
 
     // Resolve pipeline via DI (all filters injected automatically)
-    var pipeline = serviceProvider.GetRequiredService<TextFilterPipeline>();
+    var pipeline = serviceProvider.GetRequiredService<ITextFilterPipeline>();
 
-    string result = pipeline.Apply(text);
+    string result = pipeline.Apply(text,true);
     
 
     programLogger.LogInformation("Filtered result {count}", result.Length);
