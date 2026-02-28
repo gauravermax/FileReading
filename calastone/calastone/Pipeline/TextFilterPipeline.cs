@@ -26,6 +26,7 @@ public class TextFilterPipeline : ITextFilterPipeline
     /// Words are split by whitespace. Only words that pass every filter are kept.
     /// </summary>
     /// <param name="text">The input text to filter.</param>
+    /// <param name="useSequenceFlow">if True then use sequence flow else Parallel (default parallel).</param>
     /// <returns>The filtered text with only words that passed all filters.</returns>
     public string Apply(string text,bool useSequenceFlow = false)
     {
@@ -34,21 +35,23 @@ public class TextFilterPipeline : ITextFilterPipeline
             _logger.LogWarning("Input text is null or empty. Returning empty string.");
             return string.Empty;
         }
-        return useSequenceFlow ? SequenceFlow(text): ParallelFlow(text);
-    }
-
-    private string ParallelFlow(string text)
-    {
-        string[] words = text.Split((char[])null!, StringSplitOptions.RemoveEmptyEntries);
-        _logger.LogInformation("Starting filter pipeline with {WordCount} words and {FilterCount} filters.",
-            words.Length, _filters.Count);
 
         // If no filters configured, return all words as-is
         if (_filters.Count == 0)
         {
             _logger.LogInformation("No filters configured. Returning all words.");
-            return string.Join(" ", words);
+            return string.Join(" ", text);
         }
+
+        return useSequenceFlow ? SequenceFlow(text): ParallelFlow(text);
+    }
+
+    private string ParallelFlow(string text)
+    {            
+         string[] words = text.Split((char[])null!, StringSplitOptions.RemoveEmptyEntries);
+        _logger.LogInformation("Starting filter pipeline with {WordCount} words and {FilterCount} filters.",
+            words.Length, _filters.Count);
+
 
         // Adding cancellation token for 5 sec 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
@@ -94,7 +97,16 @@ public class TextFilterPipeline : ITextFilterPipeline
         IEnumerable<string> currentWords = words;
         foreach (var filter in _filters)
         {
-            currentWords = filter.Apply(currentWords).ToArray();
+            _logger.LogDebug("Applying filter: {FilterName}", filter.Name);
+            try 
+            {
+                currentWords = filter.Apply(currentWords).ToArray();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error applying filter {FilterName}. Keeping all words for this filter.",filter.Name);          
+            }
+       
         }
         return string.Join(" ", currentWords);
     }

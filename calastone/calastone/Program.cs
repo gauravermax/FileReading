@@ -17,7 +17,6 @@ services.AddLogging(builder =>
 });
 
 // Register file reader (SRP — file I/O is a separate concern)
-// Todo : inject file in the file reader
 services.AddSingleton<IFileReader, FileReader>();
 
 // Register all filters (OCP — add new filters here without modifying existing code)
